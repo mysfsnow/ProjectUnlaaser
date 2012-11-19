@@ -1,7 +1,5 @@
 ### Not code ###
-bin
 bin/*
-log
 log/*
 
 ### OS Generated ###
