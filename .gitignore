@@ -1,0 +1,9 @@
+### Not code ###
+bin
+bin/*
+log
+log/*
+
+### OS Generated ###
+.DS_Store*
+._*
