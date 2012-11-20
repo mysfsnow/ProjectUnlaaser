@@ -16,8 +16,8 @@ func main() {
 		localAddr = ":80"
 	}
 
-	http.HandleFunc("/", handleMain)
 	err := http.ListenAndServe(localAddr, nil)
+	err := http.ListenAndServe(localAddr, MainHandler{})
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
