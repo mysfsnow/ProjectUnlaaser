@@ -16,14 +16,16 @@ func main() {
 		localAddr = ":80"
 	}
 
-	err := http.ListenAndServe(localAddr, nil)
 	err := http.ListenAndServe(localAddr, MainHandler{})
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
 }
 
-func handleMain(out http.ResponseWriter, request *http.Request) {
+type MainHandler struct {
+}
+
+func (MainHandler) ServeHTTP(out http.ResponseWriter, request *http.Request) {
 	u := (* request).URL;
 
 	log.Print("Requesting: ", u.Path)
