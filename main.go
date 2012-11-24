@@ -71,6 +71,7 @@ func handleCgi(out http.ResponseWriter, request *http.Request) {
 func handleFile(out http.ResponseWriter, request *http.Request) {
 	u := (* request).URL
 	
+	log.Print("Requesting Static File: ", u.Path)
 	if u.Path[:5] == "/stc/" {
 		http.ServeFile(out, request, u.Path[1:])
 	} else {
