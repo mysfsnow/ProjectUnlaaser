@@ -6,7 +6,6 @@ import (
 	"net/http/cgi"
 	"log"
 	"os"
-	"strings"
 )
 
 /** 主函数 */
