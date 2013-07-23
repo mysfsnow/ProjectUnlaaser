@@ -6,6 +6,7 @@ import (
 	"net/http/cgi"
 	"log"
 	"os"
+	"io"
 	"code.google.com/p/go.net/websocket"
 )
 
@@ -83,5 +84,5 @@ func handleFile(out http.ResponseWriter, request *http.Request) {
 }
 
 func handleWebSocket(conn *websocket.Conn) {
-	io.Copy(ws, ws)
+	io.Copy(conn, conn)
 }
