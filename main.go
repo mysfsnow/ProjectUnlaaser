@@ -26,7 +26,7 @@ func main() {
 	// 对于stc路径下的网址，调用相应的静态文件
 	http.HandleFunc("/stc/", handleFile)
 	// WebSocket
-	http.HandleFunc("/ws/echo", websocket.Handler(handleWebSocket));
+	http.Handle("/ws/echo", websocket.Handler(handleWebSocket));
 	// 对于其他路径下的网址
 	http.HandleFunc("/", handleMain)
 
