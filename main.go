@@ -6,6 +6,7 @@ import (
 	"net/http/cgi"
 	"log"
 	"os"
+	"code.google.com/p/go.net/websocket"
 )
 
 /** 主函数 */
@@ -24,6 +25,8 @@ func main() {
 	http.HandleFunc("/cgi/", handleCgi)
 	// 对于stc路径下的网址，调用相应的静态文件
 	http.HandleFunc("/stc/", handleFile)
+	// WebSocket
+	http.HandleFunc("/ws/echo", websocket.Handler(handleWebSocket));
 	// 对于其他路径下的网址
 	http.HandleFunc("/", handleMain)
 
@@ -77,4 +80,8 @@ func handleFile(out http.ResponseWriter, request *http.Request) {
 	} else {
 		http.NotFound(out, request)
 	}
+}
+
+func handleWebSocket(conn *websocket.Conn) {
+	io.Copy(ws, ws)
 }
