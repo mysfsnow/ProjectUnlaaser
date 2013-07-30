@@ -7,7 +7,8 @@ import (
 	"log"
 	"os"
 	"io"
-	"code.google.com/p/go.net/websocket"
+	"io/ioutil"
+	"github.com/garyburd/go-websocket/websocket"
 )
 
 /** 主函数 */
@@ -27,7 +28,7 @@ func main() {
 	// 对于stc路径下的网址，调用相应的静态文件
 	http.HandleFunc("/stc/", handleFile)
 	// WebSocket
-	http.Handle("/ws/echo", websocket.Handler(handleWebSocket));
+	http.HandleFunc("/ws/echo", handleWs);
 	// 对于其他路径下的网址
 	http.HandleFunc("/", handleMain)
 
@@ -83,6 +84,38 @@ func handleFile(out http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func handleWebSocket(conn *websocket.Conn) {
-	io.Copy(conn, conn)
+func handleWs(out http.ResponseWriter, request *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", 405)
+		return
+	}
+
+	ws, err := websocket.Upgrade(out, request.Header, nil, 40966, 4096)
+	if _, ok := err.(websocket.HandshakeError); ok {
+		http.Error(w, "Not a websocket handshake", 400)
+		return
+	} else if err != nil {
+		log.Println(err)
+		return
+	}
+
+	handleWebSocket(ws)
+}
+func handleWebSocket(ws *websocket.Conn) {
+	for {
+		opcode, reader, err := ws.NextReader()
+		if err != nil { break }
+
+		switch op {
+		case websocket.OpText:
+			msg, err := ioutil.ReadAll(reader)
+			if err != nil { break }
+
+			msgText := string(msg)
+			replyText := "你说: {" + msgText + "}."
+
+			ws.WriteMessage(OpText, byte[](replyText))
+		}
+	}
+
 }
