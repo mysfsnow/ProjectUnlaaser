@@ -6,7 +6,6 @@ import (
 	"net/http/cgi"
 	"log"
 	"os"
-	"io"
 	"io/ioutil"
 	"github.com/garyburd/go-websocket/websocket"
 )
@@ -85,14 +84,14 @@ func handleFile(out http.ResponseWriter, request *http.Request) {
 }
 
 func handleWs(out http.ResponseWriter, request *http.Request) {
-	if r.Method != "GET" {
-		http.Error(w, "Method not allowed", 405)
+	if request.Method != "GET" {
+		http.Error(out, "Method not allowed", 405)
 		return
 	}
 
 	ws, err := websocket.Upgrade(out, request.Header, nil, 40966, 4096)
 	if _, ok := err.(websocket.HandshakeError); ok {
-		http.Error(w, "Not a websocket handshake", 400)
+		http.Error(out, "Not a websocket handshake", 400)
 		return
 	} else if err != nil {
 		log.Println(err)
@@ -106,7 +105,7 @@ func handleWebSocket(ws *websocket.Conn) {
 		opcode, reader, err := ws.NextReader()
 		if err != nil { break }
 
-		switch op {
+		switch opcode {
 		case websocket.OpText:
 			msg, err := ioutil.ReadAll(reader)
 			if err != nil { break }
@@ -114,7 +113,7 @@ func handleWebSocket(ws *websocket.Conn) {
 			msgText := string(msg)
 			replyText := "你说: {" + msgText + "}."
 
-			ws.WriteMessage(OpText, byte[](replyText))
+			ws.WriteMessage(websocket.OpText, []byte(replyText))
 		}
 	}
 
