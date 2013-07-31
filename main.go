@@ -89,7 +89,7 @@ func handleWs(out http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	ws, err := websocket.Upgrade(out, request.Header, nil, 40966, 4096)
+	ws, err := websocket.Upgrade(out, request.Header, nil, 4096, 4096)
 	if _, ok := err.(websocket.HandshakeError); ok {
 		http.Error(out, "Not a websocket handshake", 400)
 		return
@@ -107,13 +107,16 @@ func handleWebSocket(ws *websocket.Conn) {
 
 		switch opcode {
 		case websocket.OpText:
-			msg, err := ioutil.ReadAll(reader)
-			if err != nil { break }
+			msg, err1 := ioutil.ReadAll(reader)
+			if err1 != nil { break }
 
-			msgText := string(msg)
-			replyText := "你说: {" + msgText + "}."
+			writer, err2 := ws.NextWriter(websocket.OpText)
+			if err2 != nil { break }
 
-			ws.WriteMessage(websocket.OpText, []byte(replyText))
+			writer.Write([]byte("你说: {"));
+			writer.Write(msg);
+			writer.Write([]byte("}"));
+			writer.Close();
 		}
 	}
 
