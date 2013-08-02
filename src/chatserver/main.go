@@ -78,9 +78,8 @@ func (this *ChatBoard) getMessages(since int) (msgs []*ChatMessage, next int) {
 func getOptionLocalAddr(args []string) string {
 	if len(args) == 2 {
 		return args[1]
-	} else {
-		return ":8081"
-	}
+	} 
+	return ":8081"
 }
 
 var board *ChatBoard
