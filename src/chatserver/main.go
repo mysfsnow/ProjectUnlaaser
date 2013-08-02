@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"time"
 	"net/http"
 	"log"
@@ -9,7 +10,6 @@ import (
 	"sync"
 	"github.com/garyburd/go-websocket/websocket"
 )
-
 
 type ChatMessage struct {
 	Time time.Time
@@ -88,7 +88,7 @@ func main() {
 	var localAddr string = getOptionLocalAddr(os.Args);
 
 	http.HandleFunc("/chat", handleWs)
-	http.HandleFunc("/", http.NotFound)
+	http.HandleFunc("/", handleFile)
 
 	board = NewChatBoard(4096)
 
@@ -97,6 +97,10 @@ func main() {
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
+}
+
+func handleFile(out http.ResponseWriter, request *http.Request) {
+	http.ServeFile(out, request, "stc/chat.htm")
 }
 
 func handleWs(out http.ResponseWriter, request *http.Request) {
@@ -111,12 +115,11 @@ func handleWs(out http.ResponseWriter, request *http.Request) {
 	} else if err != nil {
 		log.Println(err)
 	} else {
-		handleWebSocket(ws)
+		handleChat(ws)
 	}
 }
 
-func handleWebSocket(ws *websocket.Conn) {
-
+func handleChat(ws *websocket.Conn) {
 	go func () {
 		for {
 			since := board.QHead;
@@ -124,7 +127,11 @@ func handleWebSocket(ws *websocket.Conn) {
 			since = next
 
 			for _, m := range recv_msg {
-				send_msg := "[" + m.Time.Format("15:04:05") + "] " + m.Text
+				timems := m.Time.Unix() * 1000 +
+						  int64(m.Time.Nanosecond() / 1000000);
+
+				timeStr := fmt.Sprintf("%016x", timems)
+				send_msg := timeStr + m.Text
 				ws.WriteMessage(websocket.OpText, []byte(send_msg));
 			}
 		}

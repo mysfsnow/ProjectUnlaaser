@@ -32,7 +32,7 @@ function webSocketConnect() {
     };
     ws.onmessage = function (evt) { 
         var received_msg = evt.data;
-        chatPrint(received_msg);
+        OnReceive(received_msg);
     };
     ws.onclose = function() { 
         chatPrint("掉线了，请不要点击“失去连接”，11平台正在帮你扣分。", "inf");
@@ -41,6 +41,25 @@ function webSocketConnect() {
     websocket = ws;
 }
 
+function FmtTime(date) {
+    function toStr2(x) {
+        if (x > 9) return "" + x;
+        else return "0" + x;
+    }
+    return toStr2(date.getHours()) + ":" +
+           toStr2(date.getMinutes()) + ":" +
+           toStr2(date.getSeconds());
+}
+
+function OnReceive(msg) {
+    var timeStr = msg.slice(0, 16);
+    var msgStr = msg.slice(16);
+
+    var time = new Date(parseInt(timeStr,16));
+    var timePrs = FmtTime(time);
+
+    chatPrint("[" + timePrs + "] " + msgStr);
+}
 function OnReturn(event) {
     if (websocket && event.keyCode==13) {
         var x = document.getElementById("txt").value;
@@ -64,7 +83,7 @@ function OnReturn(event) {
     overflow-y: scroll; 
 }
 .chat_msg {
-    background-color:#bdf; 
+    background-color:#9ce; 
     margin: 3pt;
     border-radius: 5pt;
     padding: 4pt;
