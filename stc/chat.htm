@@ -1,0 +1,126 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>聊天</title>
+<script type="text/javascript">
+var websocket;
+window.onload = function () {
+    webSocketConnect();
+}
+
+function chatPrint(x, s) {
+    if (!s) s = "msg";
+    var e = document.createElement("div");
+    var t = document.createTextNode(x);
+    e.appendChild(t);
+    e.className = "chat_" + s;
+    var zha = document.getElementById("zha");
+    zha.appendChild(e);
+}
+
+function webSocketConnect() {
+    if (! ("WebSocket" in window)) {
+        alert("WebSocket NOT supported by your Browser!");
+        return;
+    }
+    
+    ws_uri = "ws://" + window.location.hostname + ":8081/chat";
+    var ws = new WebSocket(ws_uri);
+    ws.onopen = function() {
+        chatPrint("已连接", "inf");
+    };
+    ws.onmessage = function (evt) { 
+        var received_msg = evt.data;
+        chatPrint(received_msg);
+    };
+    ws.onclose = function() { 
+        chatPrint("掉线了，请不要点击“失去连接”，11平台正在帮你扣分。", "inf");
+        setTimeout(webSocketConnect, 4000); 
+    };
+    websocket = ws;
+}
+
+function OnReturn(event) {
+    if (websocket && event.keyCode==13) {
+        var x = document.getElementById("txt").value;
+        websocket.send(x);
+    }
+}
+
+</script>
+<style type="text/css">
+.main_frame {
+    position: fixed;
+    left: 0; right: 0;
+    top: 0; bottom: 0;
+    font-size: 24pt;
+}
+.chat_list {
+    position: relative;
+    left: 0; width: 100%;
+    top: 0; height: 100%;
+    background-color: #acf;
+    overflow-y: scroll; 
+}
+.chat_msg {
+    background-color:#bdf; 
+    margin: 3pt;
+    border-radius: 5pt;
+    padding: 4pt;
+    font-family: "Monaco", "Consolas", monospace;
+    font-size: 11pt;
+}
+.chat_inf {
+    background-color:#fca; 
+    margin: 3pt;
+    border-radius: 5pt;
+    padding: 4pt;
+    font-size: 10pt;
+    font-family: "Monaco", "Consolas", monospace;
+}
+.chat_send {
+    position: relative;
+    left: 0; width: 100%;
+    top: 0; height: 100%;
+    background-color: #bdf;
+    font-size: inherit;
+}
+.chat_box {
+    position: absolute;
+    left: 0; right: 0;
+    top: 0; bottom: 0;
+    background-color: #bdf;
+    border: 0;
+    font-size: 24pt;
+    font-family: "Monaco", "Consolas", monospace;
+}
+.tbl_align {
+    position: relative;
+    border-collapse: collapse;
+    border-spacing: 0;
+    border:0; margin:0; padding:0; 
+    height:100%; width: 100%;
+}
+.tr_align {
+    border-collapse: collapse;
+    border-spacing: 0;
+    border:0; margin:0; padding:0;     
+}
+</style>
+
+</head>
+<body>
+<div id="sse" class="main_frame">
+<table class="tbl_align">
+    <tr class="tr_align"><td class="tr_align">
+        <div class="chat_list" id="zha">
+    </div></td></tr>
+    <tr class="tr_align" style="height:36pt;"><td class="tr_align">
+        <div class="chat_send">
+            <input type="text" class="chat_box" id="txt" onkeydown="OnReturn(event)" />
+    </div></td></tr>
+</table>
+</div>
+</body>
+</html>
