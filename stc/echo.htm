@@ -24,7 +24,7 @@ function WebSocketTest()
         pr("WebSocket is supported by your Browser!");
         // Let us open a web socket
 
-        var ws_uri = "ws://" + window.location.host + "/ws/echo";
+        var ws_uri = "ws://unlaas.net:8081/chat";
         ws = new WebSocket(ws_uri);
 
         ws.onopen = function()

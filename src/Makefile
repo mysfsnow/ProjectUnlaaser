@@ -1,8 +1,8 @@
-all: bin/WebUnlaaser
-.PHONY:all
+.PHONY: all
 
-PRJROOT = ../
+PRJROOT = $(shell pwd)/../
+MAKE = make PRJROOT=$(PRJROOT)
 
-bin/WebUnlaaser: main.go
-	mkdir -p bin
-	go build -compiler gc -o $(PRJROOT)/bin/WebUnlaaser main.go
+all:
+	$(MAKE) -C chatserver
+	$(MAKE) -C mainserver
