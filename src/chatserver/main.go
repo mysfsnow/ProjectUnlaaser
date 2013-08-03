@@ -2,78 +2,12 @@ package main
 
 import (
 	"fmt"
-	"time"
 	"net/http"
 	"log"
 	"os"
 	"io/ioutil"
-	"sync"
 	"github.com/garyburd/go-websocket/websocket"
 )
-
-type ChatMessage struct {
-	Time time.Time
-	Text string
-}
-
-type ChatBoard struct {
-	mutex	sync.Mutex
-	cond    *sync.Cond
-	MsgList []*ChatMessage
-	QHead   int
-}
-
-func NewChatBoard(qsize int) *ChatBoard {
-	p := new(ChatBoard)
-	p.QHead = 1;
-	p.MsgList = make([]*ChatMessage, qsize)
-	for i := range p.MsgList {
-		p.MsgList[i] = new(ChatMessage)
-	}
-	p.cond = sync.NewCond(&p.mutex)
-
-	return p
-}
-
-func (this *ChatBoard) postMessage(msg string) {
-	var head int
-
-	this.mutex.Lock()
-	{
-		head = this.QHead
-		this.QHead = head + 1
-	}
-	this.mutex.Unlock();
-	// 假设消息狂多循环队扣圈了，会触发bug
-
-	var pMsg *ChatMessage = this.MsgList[head]
-	pMsg.Time = time.Now()
-	pMsg.Text = msg
-
-	this.cond.Broadcast();
-}
-
-func (this *ChatBoard) getMessages(since int) (msgs []*ChatMessage, next int) {
-	var head int
-
-	this.mutex.Lock();
-	{
-		for this.QHead == since {
-			this.cond.Wait();
-		}
-		head = this.QHead;
-	}
-	this.mutex.Unlock();
-
-	if (since <= head) {
-		msgs = this.MsgList[since:head]
-	} else {
-		msgs = append(this.MsgList[since:], this.MsgList[:head]...)
-	}
-	next = head
-
-	return
-}
 
 func getOptionLocalAddr(args []string) string {
 	if len(args) == 2 {
@@ -120,10 +54,11 @@ func handleWs(out http.ResponseWriter, request *http.Request) {
 }
 
 func handleChat(ws *websocket.Conn) {
-	go func () {
+
+	poster := func () int {
 		for {
 			since := board.QHead;
-			recv_msg, next := board.getMessages(since)
+			recv_msg, next := board.GetMessages(since)
 			since = next
 
 			for _, m := range recv_msg {
@@ -135,18 +70,39 @@ func handleChat(ws *websocket.Conn) {
 				ws.WriteMessage(websocket.OpText, []byte(send_msg));
 			}
 		}
-	} ()
 
-	for {
-		opcode, reader, err := ws.NextReader()
-		if err != nil { break }
-
-		switch opcode {
-		case websocket.OpText:
-			msg, err1 := ioutil.ReadAll(reader)
-			if err1 != nil { break }
-
-			board.postMessage(string(msg))
-		}
+		return 0
 	}
+
+	fetcher := func () int {
+		for {
+			opcode, reader, err := ws.NextReader()
+			if err != nil { break }
+
+			switch opcode {
+				case websocket.OpText: {
+					msg, err := ioutil.ReadAll(reader)
+					if err != nil { break }
+
+					board.PostMessage(string(msg))
+				}
+				case websocket.OpBinary: {
+					msg, err := ioutil.ReadAll(reader)
+					if err != nil { break }
+
+					msgStr := fmt.Sprintf("%v", msg)
+					board.PostMessage(string(msgStr))
+				}
+			}
+		}
+
+		return 0
+	}
+
+	sync_end := make(chan int)
+	
+	go func () { sync_end <- poster() } ()
+	fetcher()
+
+	<- sync_end
 }

@@ -16,7 +16,11 @@ function chatPrint(x, s) {
     e.appendChild(t);
     e.className = "chat_" + s;
     var zha = document.getElementById("zha");
+    var autoScroll = zha.offsetHeight + zha.scrollTop >= zha.scrollHeight;
     zha.appendChild(e);
+    if (autoScroll) {
+        zha.scrollTop = zha.scrollHeight - zha.offsetHeight;
+    }
 }
 
 function webSocketConnect() {
@@ -34,7 +38,10 @@ function webSocketConnect() {
         var received_msg = evt.data;
         OnReceive(received_msg);
     };
-    ws.onclose = function() { 
+    ws.onerror = function (evt) {
+        chatPrint("哎？好像哪里不对……", "inf");
+    };
+    ws.onclose = function () { 
         chatPrint("掉线了，请不要点击“失去连接”，11平台正在帮你扣分。", "inf");
         setTimeout(webSocketConnect, 4000); 
     };
@@ -52,9 +59,15 @@ function FmtTime(date) {
 }
 
 function OnReceive(msg) {
-    var timeStr = msg.slice(0, 16);
-    var msgStr = msg.slice(16);
+    var msgStr;
+    if (typeof msg == "string") {
+        msgStr = msg.slice(16);
+    } else if (msg instanceof Blob) {
+        //msgStr = new FileReader(msg).
+    }
 
+    var timeStr = msg.slice(0, 16);
+    
     var time = new Date(parseInt(timeStr,16));
     var timePrs = FmtTime(time);
 
