@@ -12,7 +12,7 @@ import (
 func getOptionLocalAddr(args []string) string {
 	if len(args) == 2 {
 		return args[1]
-	} 
+	}
 	return ":8081"
 }
 
@@ -100,9 +100,9 @@ func handleChat(ws *websocket.Conn) {
 	}
 
 	sync_end := make(chan int)
-	
-	go func () { sync_end <- poster() } ()
+
+	go func () { sync_end <-poster() } ()
 	fetcher()
 
-	<- sync_end
+	<-sync_end
 }

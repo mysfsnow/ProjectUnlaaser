@@ -19,7 +19,7 @@ type ChatBoard struct {
 
 func NewChatBoard(qsize int) *ChatBoard {
 	p := new(ChatBoard)
-	p.QHead = 1;
+	p.QHead = 0;
 	p.MsgList = make([]*ChatMessage, qsize)
 	for i := range p.MsgList {
 		p.MsgList[i] = new(ChatMessage)
@@ -35,29 +35,29 @@ func (this *ChatBoard) PostMessage(msg string) {
 	this.mutex.Lock()
 	{
 		head = this.QHead
-		this.QHead = head + 1
+		this.QHead = (head + 1) % len(this.MsgList)
 	}
-	this.mutex.Unlock();
+	this.mutex.Unlock()
 	// 假设消息狂多循环队扣圈了，会触发bug
 
 	var pMsg *ChatMessage = this.MsgList[head]
 	pMsg.Time = time.Now()
 	pMsg.Text = msg
 
-	this.cond.Broadcast();
+	this.cond.Broadcast()
 }
 
 func (this *ChatBoard) GetMessages(since int) (msgs []*ChatMessage, next int) {
 	var head int
 
-	this.mutex.Lock();
+	this.mutex.Lock()
 	{
 		for this.QHead == since {
-			this.cond.Wait();
+			this.cond.Wait()
 		}
-		head = this.QHead;
+		head = this.QHead
 	}
-	this.mutex.Unlock();
+	this.mutex.Unlock()
 
 	if (since <= head) {
 		msgs = this.MsgList[since:head]
